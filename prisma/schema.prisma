@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String           @id @default(cuid())
+  email               String           @unique
+  passwordHash        String
+  displayName         String
+  photoUrl            String?
+  timeZone            String           @default("UTC")
+  language            String           @default("es")
+  levelPref           String           @default("beginner")
+  totalXp             Int              @default(0)
+  dailyGoal           Int              @default(20)
+  currentStreak       Int              @default(0)
+  longestStreak       Int              @default(0)
+  lastLessonLocalDate String?
+  hearts              Int              @default(5)
+  heartsUpdatedAt     DateTime         @default(now())
+  totalSeconds        Int              @default(0)
+  isSeed              Boolean          @default(false)
+  driftPerDay         Float            @default(0)
+  lastKnownRank       Int?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  settings            Settings?
+  progress            LessonProgress[]
+  sessions            LessonSession[]
+  dailyActivities     DailyActivity[]
+  notifications       Notification[]
+  emailLogs           EmailLog[]
+}
+
+model Settings {
+  userId                String   @id
+  soundEnabled          Boolean  @default(true)
+  remindersEnabled      Boolean  @default(true)
+  emailRemindersEnabled Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Unit {
+  id            String           @id @default(cuid())
+  language      String           @default("es")
+  key           String           // greetings, basics_1, numbers, colors, food_drink, travel, family, animals
+  title         String
+  description   String
+  orderIndex    Int
+  xpReward      Int              @default(20)
+  exerciseCount Int              @default(12)
+
+  vocabularies  Vocabulary[]
+  progress      LessonProgress[]
+  sessions      LessonSession[]
+
+  @@unique([language, key])
+}
+
+model Vocabulary {
+  id         String @id @default(cuid())
+  language   String @default("es")
+  unitId     String
+  spanish    String
+  english    String
+  sentenceEs String
+  sentenceEn String
+  position   Int
+
+  unit       Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@index([unitId])
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  language    String    @default("es")
+  unitId      String
+  status      String    @default("locked") // locked, unlocked, completed
+  crowns      Int       @default(0)
+  xpEarned    Int       @default(0)
+  completedAt DateTime?
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unit        Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, language, unitId])
+}
+
+model LessonSession {
+  id            String          @id @default(cuid())
+  userId        String
+  unitId        String
+  difficulty    String          @default("normal") // normal, medium, hard
+  status        String          @default("active") // active, completed, failed, abandoned
+  exercises     String          // JSON encoded exercises
+  currentIndex  Int             @default(0)
+  correctIds    String          @default("[]") // JSON encoded array of string IDs
+  wrongCount    Int             @default(0)
+  typedDraft    String?
+  xpSoFar       Int             @default(0)
+  secondsActive Int             @default(0)
+  startedAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  completedAt   DateTime?
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unit          Unit            @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  answers       SessionAnswer[]
+}
+
+model SessionAnswer {
+  id         String        @id @default(cuid())
+  sessionId  String
+  exerciseId String
+  payload    String        // JSON encoded answer
+  isCorrect  Boolean
+  createdAt  DateTime      @default(now())
+
+  session    LessonSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model DailyActivity {
+  userId    String
+  localDate String // YYYY-MM-DD
+  xp        Int    @default(0)
+  seconds   Int    @default(0)
+
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, localDate])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String    // streak_reminder, level_up, rank_change
+  message   String
+  readAt    DateTime?
+  dedupeKey String
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+}
+
+model EmailLog {
+  id        String    @id @default(cuid())
+  userId    String
+  localDate String
+  status    String    // sending, sent, failed
+  attempts  Int       @default(1)
+  sentAt    DateTime?
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, localDate])
+}
