@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { compareAnswers } from '@/lib/normalize';
-import { computeHearts, loseHeart } from './hearts';
+import { computeHearts, loseHeart, MAX_HEARTS } from './hearts';
 import { isDifficultyUnlocked, Difficulty } from './crowns';
 import { completeLesson, CompleteLessonResult } from './lessons';
 
@@ -42,16 +42,11 @@ export async function createLessonSession(
   unitId: string,
   difficulty: Difficulty = 'normal'
 ) {
-  // 1. Fetch user and check hearts
+  // 1. Lifeline system disabled: hearts are unlimited, users can always practice
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: { id: true, hearts: true, heartsUpdatedAt: true, language: true },
   });
-
-  const heartsStatus = computeHearts(user.hearts, user.heartsUpdatedAt);
-  if (heartsStatus.hearts <= 0) {
-    throw new Error('Out of hearts. Refill hearts or watch an ad to continue.');
-  }
 
   // 2. Check lesson progress status and crowns
   const progress = await prisma.lessonProgress.findUnique({
@@ -180,7 +175,7 @@ export async function createLessonSession(
     },
   });
 
-  return sanitizeSessionForClient(session, heartsStatus.hearts);
+  return sanitizeSessionForClient(session, MAX_HEARTS);
 }
 
 export interface AnswerSubmission {
@@ -307,7 +302,8 @@ export async function submitSessionAnswer(
     };
     exercises.push(requeuedExercise);
 
-    const isFailed = hearts <= 0;
+    // Unlimited lifeline mode: session is never failed by mistakes
+    const isFailed = false;
 
     const updatedSession = await prisma.lessonSession.update({
       where: { id: sessionId },
@@ -315,7 +311,7 @@ export async function submitSessionAnswer(
         exercises: JSON.stringify(exercises),
         currentIndex: session.currentIndex + 1,
         wrongCount: updatedWrongCount,
-        status: isFailed ? 'failed' : 'active',
+        status: 'active',
         typedDraft: null,
         secondsActive: { increment: deltaSeconds },
       },

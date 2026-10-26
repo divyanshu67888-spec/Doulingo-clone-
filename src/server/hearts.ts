@@ -7,6 +7,7 @@ export interface HeartsStatus {
   hearts: number;
   maxHearts: number;
   nextHeartInSeconds: number | null; // null if already at max
+  isUnlimited?: boolean;
 }
 
 export function computeHearts(
@@ -25,6 +26,7 @@ export function computeHearts(
       hearts: MAX_HEARTS,
       maxHearts: MAX_HEARTS,
       nextHeartInSeconds: null,
+      isUnlimited: true,
     };
   }
 
@@ -36,54 +38,18 @@ export function computeHearts(
     hearts: currentHearts,
     maxHearts: MAX_HEARTS,
     nextHeartInSeconds,
+    isUnlimited: true,
   };
 }
 
 /**
- * Deducts 1 heart according to ARCHITECTURE.md:
- * "On a loss: materialize the current value, subtract 1, and set heartsUpdatedAt = now only if the user was previously at cap,
- * otherwise advance it by the whole windows consumed so partial progress carries over."
+ * Deducts 1 heart - in unlimited mode, hearts never deplete so users can practice freely.
  */
-export async function loseHeart(userId: string): Promise<{ hearts: number; success: boolean }> {
-  return await prisma.$transaction(async (tx) => {
-    const user = await tx.user.findUnique({
-      where: { id: userId },
-      select: { id: true, hearts: true, heartsUpdatedAt: true },
-    });
-    if (!user) throw new Error('User not found');
-
-    const now = new Date();
-    const updatedTime = new Date(user.heartsUpdatedAt).getTime();
-    const elapsed = Math.max(0, now.getTime() - updatedTime);
-    const windows = Math.floor(elapsed / HEART_REFILL_MS);
-    const materialized = Math.min(MAX_HEARTS, user.hearts + windows);
-
-    if (materialized <= 0) {
-      return { hearts: 0, success: false };
-    }
-
-    const wasAtCap = materialized >= MAX_HEARTS;
-    const newHearts = materialized - 1;
-
-    let newUpdatedAt: Date;
-    if (wasAtCap) {
-      newUpdatedAt = now;
-    } else {
-      // Advance by the whole windows consumed so partial progress carries over
-      newUpdatedAt = new Date(updatedTime + windows * HEART_REFILL_MS);
-    }
-
-    await tx.user.update({
-      where: { id: userId },
-      data: {
-        hearts: newHearts,
-        heartsUpdatedAt: newUpdatedAt,
-      },
-    });
-
-    return { hearts: newHearts, success: true };
-  });
+export async function loseHeart(_userId: string): Promise<{ hearts: number; success: boolean }> {
+  // Unlimited hearts lifeline mode: user never loses hearts
+  return { hearts: MAX_HEARTS, success: true };
 }
+
 
 /**
  * Watch Ad / refill all hearts to 5

@@ -164,13 +164,12 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="mt-3">
-            <p className="text-2xl font-black text-gray-900 dark:text-white">
-              {stats.hearts.hearts}/5
+            <p className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-1.5">
+              <span>∞</span>
+              <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Unlimited</span>
             </p>
             <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-              {stats.hearts.nextHeartInSeconds
-                ? `+1 in ${Math.ceil(stats.hearts.nextHeartInSeconds / 60)}m`
-                : 'Full energy'}
+              Unlimited practice
             </p>
           </div>
         </div>

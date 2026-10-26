@@ -79,13 +79,12 @@ export function ListenType({
           value={typedValue}
           onChange={(e) => onChangeValue(e.target.value)}
           placeholder="Type in Spanish..."
-          className={`w-full h-14 px-4 rounded-2xl border-2 text-lg font-bold transition-all focus:outline-none ${
-            isSubmitted
+          className={`w-full h-14 px-4 rounded-2xl border-2 text-lg font-bold transition-all focus:outline-none ${isSubmitted
               ? isCorrect
                 ? 'border-[#58CC02] bg-[#58CC02]/10 text-gray-900'
                 : 'border-[#FF4B4B] bg-[#FF4B4B]/10 text-gray-900'
               : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-[#58CC02]'
-          }`}
+            }`}
         />
       </div>
     </div>

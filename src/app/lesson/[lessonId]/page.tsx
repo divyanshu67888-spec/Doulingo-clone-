@@ -6,9 +6,8 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { TOKENS } from '@/lib/tokens';
 import { soundManager } from '@/lib/sounds';
-import { X, Heart, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { X, Heart, CheckCircle2, XCircle } from 'lucide-react';
 
 // Exercise components
 import { MultipleChoice } from '@/components/exercises/MultipleChoice';
@@ -76,7 +75,11 @@ export default function LessonScreen({
   const [completionResult, setCompletionResult] = useState<CompleteLessonResult | null>(null);
 
   // Time active tracking
-  const lastActiveTimestamp = useRef<number>(Date.now());
+  const lastActiveTimestamp = useRef<number | null>(null);
+
+  useEffect(() => {
+    lastActiveTimestamp.current = Date.now();
+  }, []);
 
   const soundEnabled = stats?.settings?.soundEnabled ?? true;
 
@@ -145,8 +148,8 @@ export default function LessonScreen({
     );
   }
 
-  // Check if hearts ran out
-  if (session.hearts <= 0 || session.status === 'failed') {
+  // Out of hearts disabled: lifeline is unlimited
+  if (session.status === 'failed') {
     return (
       <OutOfHearts
         nextHeartInSeconds={stats?.hearts.nextHeartInSeconds ?? 1800}
@@ -212,7 +215,7 @@ export default function LessonScreen({
   const handleWrongMatch = async () => {
     soundManager.playWrong(soundEnabled);
     try {
-      const deltaSec = Math.floor((Date.now() - lastActiveTimestamp.current) / 1000);
+      const deltaSec = Math.floor((Date.now() - (lastActiveTimestamp.current ?? Date.now())) / 1000);
       lastActiveTimestamp.current = Date.now();
 
       const res = await fetch(`/api/sessions/${session.id}/answer`, {
@@ -233,7 +236,7 @@ export default function LessonScreen({
 
   const handleCheckAnswer = async () => {
     setIsGrading(true);
-    const deltaSec = Math.floor((Date.now() - lastActiveTimestamp.current) / 1000);
+    const deltaSec = Math.floor((Date.now() - (lastActiveTimestamp.current ?? Date.now())) / 1000);
     lastActiveTimestamp.current = Date.now();
 
     try {
@@ -321,10 +324,13 @@ export default function LessonScreen({
           <ProgressBar value={progressPercent} max={100} height="14px" />
         </div>
 
-        {/* Hearts Indicator */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 dark:bg-red-950/20 text-[#FF4B4B] font-black text-sm flex-shrink-0">
+        {/* Unlimited Hearts Indicator */}
+        <div
+          title="Unlimited Lifeline"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 dark:bg-red-950/20 text-[#FF4B4B] font-black text-sm flex-shrink-0"
+        >
           <Heart className="w-5 h-5 fill-[#FF4B4B]" />
-          <span>{session.hearts}</span>
+          <span className="text-base font-black leading-none">∞</span>
         </div>
       </header>
 
@@ -386,13 +392,12 @@ export default function LessonScreen({
 
       {/* Bottom Sticky Action / Feedback Bar */}
       <footer
-        className={`border-t p-4 sm:p-6 transition-colors duration-200 ${
-          isSubmitted
+        className={`border-t p-4 sm:p-6 transition-colors duration-200 ${isSubmitted
             ? answerFeedback?.isCorrect
               ? 'bg-[#58CC02]/15 border-[#58CC02]/30'
               : 'bg-[#FF4B4B]/15 border-[#FF4B4B]/30'
             : 'bg-white dark:bg-[#121212] border-gray-100 dark:border-gray-800'
-        }`}
+          }`}
       >
         <div className="max-w-2xl w-full mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Feedback message banner if answered */}

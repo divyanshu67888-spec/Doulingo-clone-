@@ -1,0 +1,28 @@
+{
+  "note": "Trained on SYNTHETIC demo data - not real user data.",
+  "model": "RandomForestClassifier inside a scikit-learn Pipeline",
+  "features": [
+    "accuracy",
+    "avg_response_time_sec",
+    "previous_attempts",
+    "topic"
+  ],
+  "classes": [
+    "Easy",
+    "Hard",
+    "Medium"
+  ],
+  "topics": [
+    "Basics",
+    "Greetings",
+    "Food",
+    "Family",
+    "Travel",
+    "Numbers",
+    "Animals",
+    "Colors"
+  ],
+  "test_accuracy_on_synthetic_data": 0.74,
+  "scikit_learn_version": "1.6.1",
+  "random_state": 42
+}

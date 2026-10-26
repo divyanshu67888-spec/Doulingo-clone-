@@ -23,26 +23,54 @@ export function LessonModal({
   data,
   isOpen,
   onClose,
-  hearts,
 }: {
   data: LessonModalData | null;
   isOpen: boolean;
   onClose: () => void;
-  hearts: number;
+  hearts?: number;
 }) {
   const router = useRouter();
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
   const [isStarting, setIsStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [recommendation, setRecommendation] = useState<{
+    available: boolean;
+    recommendedDifficulty?: 'normal' | 'medium' | 'hard';
+    modelRecommendation?: string;
+  } | null>(null);
+
+  React.useEffect(() => {
+    if (!isOpen || !data?.unitId) return;
+
+    const currentUnitId = data.unitId;
+    let isMounted = true;
+    async function fetchRecommendation() {
+      try {
+        const res = await fetch('/api/difficulty/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ unitId: currentUnitId }),
+        });
+        if (!res.ok) return;
+        const result = await res.json();
+        if (isMounted && result.available) {
+          setRecommendation(result);
+        }
+      } catch {
+        // Silently continue if ML service is unreachable
+      }
+    }
+
+    fetchRecommendation();
+    return () => {
+      isMounted = false;
+      setRecommendation(null);
+    };
+  }, [isOpen, data?.unitId]);
 
   if (!data) return null;
 
   const handleStart = async () => {
-    if (hearts <= 0) {
-      setErrorMessage('You need at least 1 heart to start a lesson! Refill hearts or watch an ad.');
-      return;
-    }
-
     setIsStarting(true);
     setErrorMessage(null);
 
@@ -113,8 +141,22 @@ export function LessonModal({
         </div>
 
         {/* Difficulty Selection */}
-        <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2.5">
+        <div className="space-y-2.5">
+          {recommendation?.available && recommendation.modelRecommendation && (
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300">
+              <span className="text-base select-none">🤖</span>
+              <div className="flex-1 text-xs leading-tight">
+                <span className="font-extrabold">
+                  Suggested difficulty: {recommendation.modelRecommendation}
+                </span>{' '}
+                <span className="text-[10px] text-purple-600/80 dark:text-purple-400/80 block sm:inline mt-0.5 sm:mt-0">
+                  (demo, ML model trained on synthetic data)
+                </span>
+              </div>
+            </div>
+          )}
+
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">
             Select Difficulty & Crowns
           </label>
           <div className="grid grid-cols-3 gap-2">

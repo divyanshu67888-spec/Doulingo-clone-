@@ -111,11 +111,10 @@ export default function SettingsPage() {
 
       {statusMessage && (
         <div
-          className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all ${
-            statusMessage.isError
+          className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all ${statusMessage.isError
               ? 'bg-red-50 text-red-600 border border-red-200'
               : 'bg-green-50 text-green-700 border border-green-200'
-          }`}
+            }`}
         >
           {statusMessage.isError ? (
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -171,11 +170,10 @@ export default function SettingsPage() {
               key={goal}
               type="button"
               onClick={() => handleGoalChange(goal)}
-              className={`py-3 rounded-2xl border-2 text-center text-sm font-bold transition-all ${
-                dailyGoal === goal
+              className={`py-3 rounded-2xl border-2 text-center text-sm font-bold transition-all ${dailyGoal === goal
                   ? 'border-[#58CC02] bg-[#58CC02]/10 text-[#58CC02]'
                   : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
               style={{ minHeight: TOKENS.spacing.minTouchTarget }}
             >
               {goal} XP
@@ -204,13 +202,12 @@ export default function SettingsPage() {
               type="button"
               disabled={!lang.enabled}
               onClick={() => handleLanguageChange(lang.code)}
-              className={`px-4 py-2.5 rounded-2xl border-2 flex items-center gap-2 text-sm font-bold transition-all ${
-                language === lang.code
+              className={`px-4 py-2.5 rounded-2xl border-2 flex items-center gap-2 text-sm font-bold transition-all ${language === lang.code
                   ? 'border-[#58CC02] bg-[#58CC02]/10 text-[#58CC02]'
                   : lang.enabled
-                  ? 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
-                  : 'opacity-40 border-dashed border-gray-300 cursor-not-allowed text-gray-400'
-              }`}
+                    ? 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                    : 'opacity-40 border-dashed border-gray-300 cursor-not-allowed text-gray-400'
+                }`}
               style={{ minHeight: TOKENS.spacing.minTouchTarget }}
             >
               <span>{lang.flag}</span>

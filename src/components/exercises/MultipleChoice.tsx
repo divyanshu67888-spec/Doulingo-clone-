@@ -85,9 +85,8 @@ export function MultipleChoice({
               type="button"
               disabled={isSubmitted}
               onClick={() => onSelectOption(opt.id)}
-              className={`p-4 rounded-2xl border-2 text-left flex items-center gap-3 transition-all duration-150 ${borderStyle} ${bgStyle} ${textStyle} ${
-                isSubmitted ? 'cursor-default' : 'hover:border-gray-300 dark:hover:border-gray-600 active:translate-y-[1px]'
-              }`}
+              className={`p-4 rounded-2xl border-2 text-left flex items-center gap-3 transition-all duration-150 ${borderStyle} ${bgStyle} ${textStyle} ${isSubmitted ? 'cursor-default' : 'hover:border-gray-300 dark:hover:border-gray-600 active:translate-y-[1px]'
+                }`}
               style={{
                 minHeight: TOKENS.spacing.minTouchTarget,
                 boxShadow: shadowStyle,
