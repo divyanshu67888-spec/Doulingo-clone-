@@ -31,7 +31,7 @@ export async function GET(req: Request) {
       orderIndex: u.orderIndex,
       xpReward: u.xpReward,
       exerciseCount: u.exerciseCount,
-      status: prog?.status ?? 'locked',
+      status: prog?.status === 'completed' ? 'completed' : 'unlocked',
       crowns: prog?.crowns ?? 0,
       xpEarned: prog?.xpEarned ?? 0,
     };

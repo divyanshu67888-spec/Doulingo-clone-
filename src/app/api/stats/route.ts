@@ -51,10 +51,10 @@ export async function GET() {
   const { unreadCount } = await getUserNotifications(userId);
 
   const completedCount = user.progress.filter((p) => p.status === 'completed').length;
-  const unlockedCount = user.progress.filter((p) => p.status !== 'locked').length;
+  const unlockedCount = user.progress.length;
 
   // Next lesson node to continue: first unlocked but not completed, or fallback to first
-  const currentIncomplete = user.progress.find((p) => p.status === 'unlocked');
+  const currentIncomplete = user.progress.find((p) => p.status !== 'completed');
   const continueUnitId = currentIncomplete?.unitId || user.progress[0]?.unitId || '';
 
   return NextResponse.json({
@@ -77,7 +77,7 @@ export async function GET() {
       title: p.unit.title,
       description: p.unit.description,
       orderIndex: p.unit.orderIndex,
-      status: p.status,
+      status: p.status === 'completed' ? 'completed' : 'unlocked',
       crowns: p.crowns,
       xpEarned: p.xpEarned,
       xpReward: p.unit.xpReward,

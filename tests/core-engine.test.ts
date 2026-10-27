@@ -52,7 +52,7 @@ describe('LinguaQuest Core Engine & Acceptance Criteria', () => {
     await prisma.$disconnect();
   });
 
-  it('L1: New user starts with only Greetings unlocked and the other seven locked', async () => {
+  it('L1: New user starts with all lessons unlocked by default', async () => {
     await initializeUserProgress(testUserId, 'es');
 
     const progress = await prisma.lessonProgress.findMany({
@@ -62,11 +62,8 @@ describe('LinguaQuest Core Engine & Acceptance Criteria', () => {
     });
 
     expect(progress).toHaveLength(8);
-    expect(progress[0].unit.key).toBe('greetings');
-    expect(progress[0].status).toBe('unlocked');
-
-    for (let i = 1; i < progress.length; i++) {
-      expect(progress[i].status).toBe('locked');
+    for (let i = 0; i < progress.length; i++) {
+      expect(progress[i].status).toBe('unlocked');
     }
   });
 
@@ -174,7 +171,7 @@ describe('LinguaQuest Core Engine & Acceptance Criteria', () => {
     });
     expect(basicsProg.status).toBe('unlocked');
 
-    // Check that unit 3 (Numbers) is STILL locked (Isolation intact!)
+    // Check that unit 3 (Numbers) is also unlocked by default
     const numbers = await prisma.unit.findFirstOrThrow({
       where: { language: 'es', key: 'numbers' },
     });
@@ -187,7 +184,7 @@ describe('LinguaQuest Core Engine & Acceptance Criteria', () => {
         },
       },
     });
-    expect(numbersProg.status).toBe('locked');
+    expect(numbersProg.status).toBe('unlocked');
   });
 
   it('Option order stability: options frozen on creation and do not re-shuffle', async () => {

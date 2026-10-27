@@ -48,8 +48,8 @@ export async function createLessonSession(
     select: { id: true, hearts: true, heartsUpdatedAt: true, language: true },
   });
 
-  // 2. Check lesson progress status and crowns
-  const progress = await prisma.lessonProgress.findUnique({
+  // 2. Check lesson progress status and crowns (all lessons unlocked by default)
+  let progress = await prisma.lessonProgress.findUnique({
     where: {
       userId_language_unitId: {
         userId,
@@ -60,8 +60,24 @@ export async function createLessonSession(
     include: { unit: true },
   });
 
-  if (!progress || progress.status === 'locked') {
-    throw new Error('This lesson is locked.');
+  if (!progress) {
+    progress = await prisma.lessonProgress.create({
+      data: {
+        userId,
+        language: user.language,
+        unitId,
+        status: 'unlocked',
+        crowns: 0,
+        xpEarned: 0,
+      },
+      include: { unit: true },
+    });
+  } else if (progress.status === 'locked') {
+    progress = await prisma.lessonProgress.update({
+      where: { id: progress.id },
+      data: { status: 'unlocked' },
+      include: { unit: true },
+    });
   }
 
   if (!isDifficultyUnlocked(difficulty, progress.crowns)) {

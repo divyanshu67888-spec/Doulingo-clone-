@@ -11,8 +11,7 @@ export async function initializeUserProgress(userId: string, language: string = 
   });
 
   for (const unit of units) {
-    const isFirst = unit.orderIndex === 0;
-    await prisma.lessonProgress.upsert({
+    const existing = await prisma.lessonProgress.findUnique({
       where: {
         userId_language_unitId: {
           userId,
@@ -20,16 +19,25 @@ export async function initializeUserProgress(userId: string, language: string = 
           unitId: unit.id,
         },
       },
-      update: {},
-      create: {
-        userId,
-        language,
-        unitId: unit.id,
-        status: isFirst ? 'unlocked' : 'locked',
-        crowns: 0,
-        xpEarned: 0,
-      },
     });
+
+    if (!existing) {
+      await prisma.lessonProgress.create({
+        data: {
+          userId,
+          language,
+          unitId: unit.id,
+          status: 'unlocked',
+          crowns: 0,
+          xpEarned: 0,
+        },
+      });
+    } else if (existing.status === 'locked') {
+      await prisma.lessonProgress.update({
+        where: { id: existing.id },
+        data: { status: 'unlocked' },
+      });
+    }
   }
 }
 
